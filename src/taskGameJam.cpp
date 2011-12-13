@@ -3,6 +3,7 @@
 #include "voice.h"
 #include "geomDraw.h"
 #include "clock.h"
+#include "httpClient.h"
 
 namespace{
 	const float c_a001_01[] = {
@@ -44,6 +45,43 @@ namespace{
 	const int pointerH = 50;
 }
 
+class MsgTest : public lw::HTTPMsg{
+public:
+    MsgTest()
+    :lw::HTTPMsg(L"/dms/devislogin", getHttpClient()){
+        
+    }
+    virtual void onRespond(){
+        const char* c = _buff.readString();
+        lwinfo(c);
+    }
+};
+
+class MsgLogin : public lw::HTTPMsg{
+public:
+    MsgLogin(const wchar_t* email, const wchar_t* password)
+    :lw::HTTPMsg(L"/dms/devlogin", getHttpClient(), true){
+        std::wstringstream ss;
+        ss << L"?email=" << email << L"&password=" << password;
+        addParam(ss.str().c_str());
+    }
+    virtual void onRespond(){
+        const char* c = _buff.readString();
+        lwinfo(c);
+    }
+};
+
+class MsgLogout : public lw::HTTPMsg{
+public:
+    MsgLogout()
+    :lw::HTTPMsg(L"/dms/devlogout", getHttpClient()){
+    }
+    virtual void onRespond(){
+        const char* c = _buff.readString();
+        lwinfo(c);
+    }
+};
+
 void TaskGameJam::vBegin(){
 	lw::srand();
 	lw::App::s().setFrameInterval(1);
@@ -76,7 +114,7 @@ void TaskGameJam::vBegin(){
 	_pSptSitMan->setUV(0, 119, 232, 213);
 	_pSptSitMan->setPos(192, 107);
 
-	 lw::Button9Def def("ui.png", 0, 0, 0, 2, 0, 0, 1, 1, 1, 1, 1, 1, "calibri20.fnt", GL_NEAREST); 
+    lw::Button9Def def("ui.png", 0, 0, 0, 2, 0, 0, 1, 1, 1, 1, 1, 1, "calibri20.fnt", GL_NEAREST); 
 	_pBtnDieAgain = lw::UIButton::create9(def);
 	_pBtnDieAgain->setPos(120, 100);
 	_pBtnDieAgain->setSize(80, 40);
@@ -92,6 +130,10 @@ void TaskGameJam::vBegin(){
 	_pFontClock->setPos(350.f, 5.f);
 	
 	reset();
+    
+    
+    MsgLogin* pLogin = new MsgLogin(L"李炜", L"aa");
+    pLogin->send();
 }
 
 void TaskGameJam::vEnd(){
@@ -113,6 +155,7 @@ void TaskGameJam::vEnd(){
 }
 
 void TaskGameJam::vMain(float dt){
+    httpClientMain();
 	if ( _step == STEP_PLAY ){
 		if ( _isTimeRun ){
 			_t += 1000.f/60.f;
@@ -222,6 +265,17 @@ bool TaskGameJam::vOnTouchEvent(std::vector<lw::TouchEvent>& events){
 		if ( it->updated ){
 			const lw::TouchEvent& evt = it->evt;
 			if ( evt.type == lw::TouchEvent::TOUCH ){
+                if ( evt.x < 160 ){
+                    MsgLogin* pMsg = new MsgLogin(L"aa", L"aa");
+                    pMsg->send();
+                }else if ( evt.x < 320 ){
+                    MsgLogout* pMsg = new MsgLogout();
+                    pMsg->send();
+                }else{
+                    MsgTest* pMsg = new MsgTest();
+                    pMsg->send();
+                }
+                
                 if ( evt.x < 20 && evt.y < 20 ){
 					_showPoint = !_showPoint;
 				}else if ( _gesId == -1 ){

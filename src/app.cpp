@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "app.h"
 #include "taskGameJam.h"
+#include "httpClient.h"
 #include "option.h"
 
 MicroVol1App::MicroVol1App(){
@@ -41,10 +42,10 @@ MicroVol1App::MicroVol1App(){
 	r = sqlite3_open(docDir.c_str(), &g_pSaveDb);
 	lwassert(r == SQLITE_OK);
 #endif
-
-	taskGameJam.start(0);
+    taskGameJam.start(0);
 	optionLoad();
 	new lw::SoundMgr(5);
+    initHttpClient();
 }
 
 MicroVol1App::~MicroVol1App(){
@@ -52,6 +53,7 @@ MicroVol1App::~MicroVol1App(){
 	sqlite3_close(g_pDataDb);
 	sqlite3_close(g_pSaveDb);
 	delete lw::SoundMgr::ps();
+    destroyHttpClient();
 }
 
 void MicroVol1App::vInit(){

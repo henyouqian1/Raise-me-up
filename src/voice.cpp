@@ -47,8 +47,11 @@ void VoiceSegsQueue::add(VoiceSegs* pSegs){
 	if ( _queue.empty() ){
 		_queue.push_back(pSegs);
 		pSegs->play();
-	}else{
+    }else{
 		if ( _queue.size() == 2 ){
+            if ( _queue.back() == pSegs ){
+                return;
+            }
 			_queue.pop_back();
 		}
 		if ( pSegs != _queue.front() ){
@@ -56,6 +59,7 @@ void VoiceSegsQueue::add(VoiceSegs* pSegs){
 			_nextPoint = _queue.front()->getNextPoint();
 		}
 	}
+    
 }
 
 void VoiceSegsQueue::main(){
